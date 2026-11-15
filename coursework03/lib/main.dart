@@ -41,7 +41,7 @@ class CloudQuestApp extends StatelessWidget {
           final user = snapshot.data;
           return user == null
               ? const SignInScreen()
-              : ChallengeScreen(user: user, onComplete: () {});
+              : ChallengeScreen(user: user);
         },
       ),
     );
