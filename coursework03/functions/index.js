@@ -73,14 +73,71 @@ exports.completeToday = onCall(async (request) => {
   });
 });
 
-exports.askQuestCoach = onCall(async (request) => {
-  if (!request.auth) {
-    throw new HttpsError("unauthenticated", "Sign in first.");
-  }
-  const question = (request.data?.question ?? "").toString().trim();
-  if (!question) {
-    throw new HttpsError("invalid-argument", "Question is required.");
-  }
-  // api goes here?
-  return { reply: "..." };
-});
+const {defineSecret} = require("firebase-functions/params");
+const {GoogleGenerativeAI} = require("@google/generative-ai");
+
+const geminiApiKey = defineSecret("GEMINI_API_KEY");
+const getChallengeAndProgressTool = {
+  functionDeclarations: [
+    {
+      name: "getChallengeAndProgress",
+      description:
+        "Reads today's challenge prompt and this learner's own progress. " +
+        "Read-only: cannot modify data or grant rewards.",
+      parameters: {type: "object", properties: {}},
+    },
+  ],
+};
+
+exports.askQuestCoach = onCall(
+  {secrets: [geminiApiKey]},
+  async (request) => {
+    if (!request.auth) {
+      throw new HttpsError("unauthenticated", "Sign in first.");
+    }
+    const question = (request.data?.question ?? "").toString().trim();
+    if (!question) {
+      throw new HttpsError("invalid-argument", "Question is required.");
+    }
+
+    const uid = request.auth.uid;
+
+    async function getChallengeAndProgress() {
+      const [challengeSnap, progressSnap] = await Promise.all([
+        db.doc("challenges/today").get(),
+        db.doc(`users/${uid}/progress/today`).get(),
+      ]);
+      return {
+        challenge: challengeSnap.data() ?? null,
+        progress: progressSnap.data() ?? null,
+      };
+    }
+
+    const genAI = new GoogleGenerativeAI(geminiApiKey.value());
+    const model = genAI.getGenerativeModel({
+      model: "gemini-3.8-flash",
+      tools: [getChallengeAndProgressTool],
+      systemInstruction:
+        "You are a supportive quest coach. Use the supplied quest data to give one concise hint, not the complete answer. Never claim a reward was granted. You cannot write data; the learner decides whether to use the separate Complete button.",
+    });
+
+    const chat = model.startChat();
+    let result = await chat.sendMessage(question);
+
+    const call = result.response.functionCalls()?.[0];
+    if (call?.name === "getChallengeAndProgress") {
+      const toolResult = await getChallengeAndProgress();
+      result = await chat.sendMessage([
+        {
+          functionResponse: {
+            name: "getChallengeAndProgress",
+            response: toolResult,
+          },
+        },
+      ]);
+    }
+
+    const reply = result.response.text();
+    return {reply};
+  },
+);
