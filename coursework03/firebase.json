@@ -1,0 +1,40 @@
+{
+  "flutter": {
+    "platforms": {
+      "android": {
+        "default": {
+          "projectId": "coursework03-5949a",
+          "appId": "1:240902097644:android:bdb27e05e69d27f5b133c9",
+          "fileOutput": "android/app/google-services.json"
+        }
+      },
+      "dart": {
+        "lib/firebase_options.dart": {
+          "projectId": "coursework03-5949a",
+          "configurations": {
+            "android": "1:240902097644:android:bdb27e05e69d27f5b133c9",
+            "ios": "1:240902097644:ios:e4cbc980a60ae3d2b133c9",
+            "macos": "1:240902097644:ios:e4cbc980a60ae3d2b133c9",
+            "web": "1:240902097644:web:67e15951991f296ab133c9",
+            "windows": "1:240902097644:web:40a5199d5f840d01b133c9"
+          }
+        }
+      }
+    }
+  },
+  "emulators": {
+    "auth": {
+      "port": 9099
+    },
+    "functions": {
+      "port": 5001
+    },
+    "firestore": {
+      "port": 8080
+    },
+    "ui": {
+      "enabled": true
+    },
+    "singleProjectMode": true
+  }
+}

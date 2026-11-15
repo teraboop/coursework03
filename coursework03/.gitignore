@@ -46,3 +46,12 @@ app.*.map.json
 
 # Widget Preview related
 .widget_preview/
+
+# Firebase configuration files (contain API keys/project IDs)
+**/google-services.json
+**/GoogleService-Info.plist
+lib/firebase_options.dart
+.firebase/
+firebase-debug.log
+firebase-debug.*.log
+.firebaserc
