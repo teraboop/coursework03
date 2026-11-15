@@ -13,3 +13,4 @@ Future<String> getQuestHint(String question) async {
   });
   return result.data['reply'] as String;
 }
+
